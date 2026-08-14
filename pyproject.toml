@@ -1,0 +1,31 @@
+[project]
+name = "funchat"
+version = "0.1.0"
+description = "FunChat backend"
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv==1.2.2",
+    "requests==2.34.2",
+    "websockets==17.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort",
+    "flake8",
+    "flake8-pyproject",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "E704"]
+exclude = [".git", "__pycache__", ".venv", "venv"]
