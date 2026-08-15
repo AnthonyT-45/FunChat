@@ -151,22 +151,3 @@ async def main():
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
-
-
-# POST call to create a reward with same CLIENT_ID
-
-# request = requests.post(
-#     url="https://api.twitch.tv/helix/channel_points/custom_rewards",
-#     params=query_params, headers=headers, json=request_body,
-# )
-# request_dict = request.json()
-# logger.info(request_dict)
-
-# GET call to retrieve reward_id
-
-# request = requests.get(
-#     url="https://api.twitch.tv/helix/channel_points/custom_rewards",
-#     params=query_params, headers=headers,
-# )
-# request_dict = request.json()
-# logger.info(request_dict)
