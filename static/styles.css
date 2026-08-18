@@ -31,6 +31,24 @@ body {
   opacity: 0;
 }
 
+.messages p.rising {
+  overflow: hidden;
+  animation: rise 220ms ease-out;
+}
+
+@keyframes rise {
+  from {
+    height: 0;
+    opacity: 0;
+    transform: translateY(0.4em);
+  }
+  to {
+    height: var(--height);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .badge {
   height: 1em;
   width: 1em;

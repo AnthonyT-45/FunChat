@@ -30,6 +30,13 @@ function renderChat(data) {
   message.appendChild(text);
 
   document.getElementById("messages").appendChild(message);
+
+  message.style.setProperty("--height", message.scrollHeight + "px");
+  message.classList.add("rising");
+  message.addEventListener("animationend", function () {
+    message.classList.remove("rising");
+  });
+
   setTimeout(function () {
     message.classList.add("fading");
     message.addEventListener("transitionend", function () {
