@@ -2,13 +2,12 @@ import asyncio
 import json
 import logging
 import os
-import time
 from contextlib import asynccontextmanager
 
 import requests
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from websockets.asyncio.client import connect
@@ -24,7 +23,8 @@ REWARD_ID = os.getenv("REWARD_ID")
 websocket_url = "wss://eventsub.wss.twitch.tv/ws"
 html_path = "index.html"
 
-message_queue: asyncio.Queue[str] = asyncio.Queue()
+message_queue = asyncio.Queue()
+connections: set[WebSocket] = set()
 
 headers = {
     "Client-Id": f"{CLIENT_ID}",
@@ -42,8 +42,10 @@ logging.basicConfig(format=FORMAT, level=logging.INFO)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     poller = asyncio.create_task(main())
+    fanout = asyncio.create_task(broadcaster())
     yield
     poller.cancel()
+    fanout.cancel()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -65,7 +67,8 @@ async def fun_chat():
 
                     if message_type == "session_welcome":
                         session_id = data["payload"]["session"]["id"]
-                        requests.post(
+                        await asyncio.to_thread(
+                            requests.post,
                             url="https://api.twitch.tv/helix/eventsub/subscriptions",
                             headers=headers,
                             json={
@@ -90,9 +93,16 @@ async def fun_chat():
                         # logger.info(f"Chat message: {chat_message}")
                     if message_type == "notification":
                         readable_data = json.loads(readable)
+                        logger.info(json.dumps(readable_data, indent=4))
                         chat_message = readable_data["payload"]["event"]["message"]["text"]
                         user = readable_data["payload"]["event"]["chatter_user_name"]
-                        result = f"{user}: {chat_message}"
+                        user_color = readable_data["payload"]["event"]["color"]
+                        logger.info(user_color)
+                        result = {
+                            "user": user,
+                            "user_color": user_color,
+                            "chat_message": chat_message,
+                        }
                         logger.info(result)
                         await message_queue.put(result)
 
@@ -108,12 +118,31 @@ async def get():
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+    connections.add(websocket)
+    logger.info(f"Client connected.")
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
+    finally:
+        # the disconnect event is delivered as soon as the tab closes.
+        connections.discard(websocket)
+        logger.info(f"Client disconnected.")
+
+
+async def broadcaster():
+    """Single consumer of the queue, fans each message out to every open tab."""
     while True:
-        await websocket.send_text(await message_queue.get())
+        message = await message_queue.get()
+        for websocket in list(connections):
+            try:
+                await websocket.send_json(message)
+            except (WebSocketDisconnect, RuntimeError):
+                connections.discard(websocket)
 
 
 async def main():
-
     while True:
         query_params = {
             "broadcaster_id": BROADCASTER_ID,
@@ -121,7 +150,8 @@ async def main():
             "status": "UNFULFILLED",
         }
 
-        request = requests.get(
+        request = await asyncio.to_thread(
+            requests.get,
             url="https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions",
             params=query_params,
             headers=headers,
@@ -131,13 +161,14 @@ async def main():
         response = request.json()
 
         if not response.get("data"):
-            time.sleep(5)
+            await asyncio.sleep(5)
             continue
 
         redeem_id = response["data"][0]["id"]
         # logger.info(f"REDEEM_ID: {redeem_id}")
 
-        requests.patch(
+        await asyncio.to_thread(
+            requests.patch,
             url="https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions",
             headers=headers,
             params={"broadcaster_id": BROADCASTER_ID, "id": f"{redeem_id}", "reward_id": REWARD_ID},

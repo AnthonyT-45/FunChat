@@ -1,3 +1,22 @@
-.class {
-  color: black;
+.messages {
+  color: white;
+  font-weight: bolder;
+  font-family: "Open Sans";
+}
+
+.chatbox {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 400px;
+}
+
+.messages p {
+  opacity: 1;
+  transition: opacity 1s ease-in-out;
+  margin: 0;
+}
+
+.messages p.fading {
+  opacity: 0;
 }
