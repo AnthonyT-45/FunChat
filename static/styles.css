@@ -1,0 +1,89 @@
+body {
+  margin: 0;
+}
+
+.messages {
+  color: white;
+  font-weight: bolder;
+  font-family: "Open Sans";
+  font-size: 24px;
+  text-shadow:
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    2px 2px 0 #000;
+}
+
+.chatbox {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100vh;
+}
+
+.messages p {
+  opacity: 1;
+  transition: opacity 1s ease-in-out;
+  margin: 0;
+}
+
+.messages p.fading {
+  opacity: 0;
+}
+
+.messages p.rising {
+  overflow: hidden;
+  animation: rise 220ms ease-out;
+}
+
+@keyframes rise {
+  from {
+    height: 0;
+    opacity: 0;
+    transform: translateY(0.4em);
+  }
+  to {
+    height: var(--height);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.badge {
+  height: 1em;
+  width: 1em;
+  vertical-align: -0.15em;
+  margin-right: 4px;
+}
+
+.text.effect-shiny {
+  background: linear-gradient(
+    90deg,
+    #ff5f6d,
+    #ffc371,
+    #47e891,
+    #4facfe,
+    #b06ab3,
+    #ff5f6d
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  animation: shine 3s linear infinite;
+}
+
+@keyframes shine {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 300% 0;
+  }
+}
+
+.text.effect-big {
+  font-size: 1.6em;
+}
