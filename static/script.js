@@ -23,15 +23,15 @@ function renderChat(data) {
   if (data.effect) {
     text.classList.add("effect-" + data.effect);
   }
-  text.textContent =
-    data.effect === "scramble"
-      ? scramble(data.chat_message)
-      : data.chat_message;
+  text.textContent = data.chat_message;
   message.appendChild(text);
 
   document.getElementById("messages").appendChild(message);
 
-  message.style.setProperty("--height", message.scrollHeight + "px");
+  message.style.setProperty(
+    "--height",
+    message.getBoundingClientRect().height + "px",
+  );
   message.classList.add("rising");
   message.addEventListener("animationend", function () {
     message.classList.remove("rising");
